@@ -171,7 +171,7 @@ class FocalLoss(nn.Module):
 
     def __init__(self, gamma=2.0, reduction='mean'):
         super().__init__()
-        self.gamma, self.reduction = gamma, reduction
+        self.gamma, self.reduction = gamma
 
     def forward(self, inputs, targets):
         ce_loss = F.cross_entropy(inputs, targets, reduction='none')
@@ -417,9 +417,9 @@ def train_eval_baseline(model_name, model_class, model_type, X_dyn, X_sta, y, nu
                 model.train()
                 for db, sb, yb in loader_tr:
                     db, sb, yb = db.to(Config.DEVICE), sb.to(Config.DEVICE), yb.to(Config.DEVICE)
-                    opt.zero_grad();
-                    loss = crit(model(db, sb), yb);
-                    loss.backward();
+                    opt.zero_grad()
+                    loss = crit(model(db, sb), yb)
+                    loss.backward()
                     opt.step()
             model.eval()
             preds = []
@@ -463,8 +463,8 @@ def train_and_save_final_model(X_dyn, X_sta, y, num_classes, embed_dim, opt_dyn_
     model.train()
     for _ in range(Config.EPOCHS):
         for db, sb, yb in loader:
-            opt.zero_grad();
-            crit(model(db.to(Config.DEVICE), sb.to(Config.DEVICE)), yb.to(Config.DEVICE)).backward();
+            opt.zero_grad()
+            crit(model(db.to(Config.DEVICE), sb.to(Config.DEVICE)), yb.to(Config.DEVICE)).backward()
             opt.step()
 
     torch.save(model.state_dict(), save_path)
@@ -595,9 +595,9 @@ def main():
     train_and_save_final_model(opt_X_dyn, opt_X_sta, y, num_classes, opt_embed, opt_dyn_k, opt_sta_k, opt_dyn_d,
                                opt_drop, opt_batch, opt_lr, Config.BEST_MODEL_PATH)
 
-    # ---------------- Phase 2: Comprehensive 4-Dimensional Ablation Study ----------------
+    # ---------------- Phase 2: Component Ablation Study ----------------
     logger.info("\n" + "=" * 125)
-    logger.info("🔬 [Phase 2]: Comprehensive 4-Dimensional Component Ablation Study")
+    logger.info("🔬 [Phase 2]: Component Ablation Study")
 
     base_cfg = {"embed_dim": opt_embed, "sta_kernels": opt_sta_k, "dyn_kernels": opt_dyn_k, "dyn_dilations": opt_dyn_d,
                 "dropout": opt_drop, "batch_size": opt_batch, "lr": opt_lr}
@@ -610,15 +610,7 @@ def main():
         {**base_cfg, "name": "1b. w/o Dynamic (Static Only)", "mode": "sta_only", "fusion_type": "gated",
          "use_resample": True, "use_focal": True, "use_dilation": True},
         {**base_cfg, "name": "2. w/o Gated Fusion (Simple Concat)", "mode": "dual", "fusion_type": "concat",
-         "use_resample": True, "use_focal": True, "use_dilation": True},
-        {**base_cfg, "name": "3a. w/o Algo 4-1 (No Resample)", "mode": "dual", "fusion_type": "gated",
-         "use_resample": False, "use_focal": True, "use_dilation": True},
-        {**base_cfg, "name": "3b. w/o Focal Loss (Standard CE)", "mode": "dual", "fusion_type": "gated",
-         "use_resample": True, "use_focal": False, "use_dilation": True},
-        {**base_cfg, "name": "3c. w/o Algo 4-1 & Focal Loss", "mode": "dual", "fusion_type": "gated",
-         "use_resample": False, "use_focal": False, "use_dilation": True},
-        {**base_cfg, "name": "4. w/o Dilated CNN (Standard 1D-CNN)", "mode": "dual", "fusion_type": "gated",
-         "use_resample": True, "use_focal": True, "use_dilation": False},
+         "use_resample": True, "use_focal": True, "use_dilation": True}
     ]
 
     res_ablation = []
@@ -673,7 +665,7 @@ def main():
     logger.info("-" * 125)
     for name, acc, prec, rec, f1, params, mem, lat in results:
         logger.info(
-            f"{('✨ ' + name if 'Ours' in name else name).ljust(35)} | {acc:.4f} | {prec:.4f} | {rec:.4f} | {f1:.4f} | {params:<10} | {mem:<10 } | {lat}")
+            f"{('✨ ' + name if 'Ours' in name else name).ljust(35)} | {acc:.4f} | {prec:.4f} | {rec:.4f} | {f1:.4f} | {params:<10} | {mem:<10} | {lat}")
 
 
 if __name__ == "__main__":
